@@ -2,24 +2,32 @@ import torch
 from .self_smoothing_operator import SSO
 
 class WeightedKNNPredictor():
-    def __init__(self, k=10, gaussian_kernel_k=1.0, ssot=10):
+    def __init__(self, k=10, gaussian_kernel_k=1.0, ssot=10, class_num=2):
         self.gaussian_kernel_k = gaussian_kernel_k
         self.k = k
         self.sso = SSO(k_nearest_neighbors=k, gaussian_kernel_k=gaussian_kernel_k, iteration_num=ssot)
+        self.class_num = class_num
 
     def __call__(self, batch_feature, data_bank):
-        list_predictive_delivery_qty = []
+        """
+        :param batch_feature: tensor in shape (n, feature_dim)
+        :param data_bank: tensor in shape (data_size, feature_dim + 1), the last dimension of each data is the label id
+        :return: probability tensor in shape (n, class_num)
+        """
         feature_matrix = torch.cat([batch_feature, data_bank[:, :-1]], dim=0)
         batch_smoothed_similarity_matrix = self.sso(feature_matrix=feature_matrix)
-        for iter in range(batch_feature.shape[0]):
-            neighbors = data_bank
-            sorted_similarity, indices = torch.sort(batch_smoothed_similarity_matrix[iter, batch_feature.shape[0]:], 0, descending=True)
-            k_nearest_neighbors_weights = torch.softmax(sorted_similarity[:self.k], dim=0)
-            k_nearest_neighbors_label = neighbors[:, -1][indices[:self.k]]
-            
-            label = (neighbors[:, -1][indices[:self.k]] * torch.softmax(sorted_similarity[:self.k], dim=0)).sum()
+        batch_sorted_similarity, batch_indices = torch.sort(
+            batch_smoothed_similarity_matrix[:batch_feature.shape[0], batch_feature.shape[0]:],
+            dim=1,
+            descending=True
+        )
+        batch_k_nearest_neighbors_weights = torch.softmax(batch_sorted_similarity[:, :self.k], dim=1)
+        batch_k_nearest_neighbors_label = data_bank[:, -1][batch_indices[:, :self.k]]
 
-        return torch.stack(list_predictive_delivery_qty, dim=0)
+        batch_prob_list = []
+        for class_id in range(self.class_num):
+            class_wise_prob = (batch_k_nearest_neighbors_label.eq(class_id) * batch_k_nearest_neighbors_weights).sum(1)
+            batch_prob_list.append(class_wise_prob)
+        batch_prob = torch.stack(batch_prob_list, dim=1)
 
-if __name__ == '__main__':
-    pass
+        return batch_prob
