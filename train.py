@@ -47,8 +47,8 @@ def train(args):
     route_dict = info_prefix.extract_route()
     aircraft_type_dict = info_prefix.extract_aircraft_type()
     aircraft_name_dict = info_prefix.extract_aircraft_name()
-    max_min_seating_capacity_dict = info_prefix.extract_max_min_seating_capacity
-    max_min_baggage_weight_dict = info_prefix.extract_max_min_baggage_weight
+    max_min_seating_capacity_dict = info_prefix.extract_max_min_seating_capacity()
+    max_min_baggage_weight_dict = info_prefix.extract_max_min_baggage_weight()
 
     if torch.cuda.is_available():
         device = 'cuda'
