@@ -242,7 +242,7 @@ def train(args):
                     epoch_loss.append(combinded_loss.item())
                     rdp_loss_list.append(random_projection_loss.item())
                     reconstruction_loss_list.append(reconstruction_loss.item())
-                    num_correct_pred += correct_pred.sum()
+                    num_correct_pred += correct_pred.sum(0).item()
                     num_pred += data['rep'].shape[0]
 
             total_loss = np.mean(epoch_loss)
