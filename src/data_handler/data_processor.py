@@ -65,7 +65,7 @@ class FlightDataset(Dataset):
              pax_adult_rep.float(),
              pax_inf_rep.float(),
              seating_capacity_rep.float(),
-             baggage_weight_rep].float(),
+             baggage_weight_rep.float()],
             dim=0
         )
 

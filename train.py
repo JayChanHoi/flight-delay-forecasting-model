@@ -121,7 +121,7 @@ def train(args):
     optimizer = base_optimizer
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
         optimizer,
-        T_0=(train_generator.__len__() / args.batch_size) * 50,
+        T_0=int(train_generator.__len__() * 50),
         T_mult=1,
         eta_min=0.00001
     )

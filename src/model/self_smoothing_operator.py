@@ -31,7 +31,7 @@ class SSO():
             raise ValueError("feature_matrix and similarity_matrix shouldn't be None at the same time")
         elif feature_matrix is not None and similarity_matrix is not None:
             raise ValueError("only one of feature_matrix and similarity_matrix to be not None")
-        elif feature_matrix:
+        elif feature_matrix is not None:
             with torch.no_grad():
                 similarity_matrix = self._get_similarity_matrix(feature_matrix)
 
