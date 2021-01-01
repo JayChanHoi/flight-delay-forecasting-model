@@ -56,16 +56,16 @@ class FlightDataset(Dataset):
         baggage_weight_rep = torch.tensor([scaled_baggage_weight])
 
         row_rep = torch.cat(
-            [aircraft_name_rep,
-             aircraft_type_rep,
-             route_rep,
-             weekday_rep,
-             schedule_departure_time_rep,
-             schedule_arrival_time_rep,
-             pax_adult_rep,
-             pax_inf_rep,
-             seating_capacity_rep,
-             baggage_weight_rep],
+            [aircraft_name_rep.float(),
+             aircraft_type_rep.float(),
+             route_rep.float(),
+             weekday_rep.float(),
+             schedule_departure_time_rep.float(),
+             schedule_arrival_time_rep.float(),
+             pax_adult_rep.float(),
+             pax_inf_rep.float(),
+             seating_capacity_rep.float(),
+             baggage_weight_rep].float(),
             dim=0
         )
 
