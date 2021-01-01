@@ -15,7 +15,8 @@ class WeightedKNNPredictor():
         :return: probability tensor in shape (n, class_num)
         """
         feature_matrix = torch.cat([batch_feature, data_bank[:, :-1]], dim=0)
-        batch_smoothed_similarity_matrix = self.sso(feature_matrix=feature_matrix)
+        batch_smoothed_similarity_matrix = feature_matrix
+        # batch_smoothed_similarity_matrix = self.sso(feature_matrix=feature_matrix)
         batch_sorted_similarity, batch_indices = torch.sort(
             batch_smoothed_similarity_matrix[:batch_feature.shape[0], batch_feature.shape[0]:],
             dim=1,
