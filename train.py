@@ -256,7 +256,7 @@ def train(args):
             print('Epoch: {}/{}. Total loss: {:1.5f}'.format(epoch + 1, args.num_epochs, total_loss))
             print('Epoch: {}/{}. accuracy : {:1.5f}'.format(epoch + 1, args.num_epochs, accuracy))
 
-            if (epoch + 1) % opt.eval_interval == 0 and epoch + 1 >= 0:
+            if (epoch + 1) % args.eval_interval == 0 and epoch + 1 >= 0:
                 if torch.cuda.device_count() > 1:
                     checkpoint_dict = {'epoch': epoch + 1, 'state_dict': model.module.state_dict()}
                     torch.save(
