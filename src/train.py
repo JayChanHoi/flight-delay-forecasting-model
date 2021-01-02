@@ -8,10 +8,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from .src.utils import resume
-from .src.data_handler.data_processor import FlightDataset, InfoPrefix
-from .src.model.embedding_network import FTN
-from .src.model.knn import WeightedKNNPredictor
+from .utils import resume
+from .data_handler.data_processor import FlightDataset, InfoPrefix
+from .model.embedding_network import FTN
+from .model.knn import WeightedKNNPredictor
 
 import argparse
 import os
@@ -24,6 +24,7 @@ def get_args():
     parser.add_argument("--num_worker", type=int, default=4, help="The number of worker for dataloader")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument('--weight_decay', type=float, default=0.00004)
+    parser.add_argument('--sample_size', type=int, default=5000)
     parser.add_argument('--embedding_dim', type=int, default=32)
     parser.add_argument('--random_projection_dim', type=int, default=256)
     parser.add_argument('--dropout_p', type=float, default=0.1)
@@ -95,7 +96,7 @@ def train(args):
 
     model = FTN(input_dim=train_dataset.input_dim(), embedding_dim=args.embedding_dim, dropout_p=args.dropout_p)
     random_projection_layer = torch.normal(mean=0, std=1.0, size=[train_dataset.input_dim(), args.random_projection_dim])
-    knn_predictor = WeightedKNNPredictor(args.num_nearest_neighbors, args.gaussian_kernel_k, args.SSOt, 2)
+    knn_predictor = WeightedKNNPredictor(args.num_nearest_neighbors, args.gaussian_kernel_k, args.SSOt, 2, args.sample_size)
 
     if torch.cuda.is_available():
         model.cuda()

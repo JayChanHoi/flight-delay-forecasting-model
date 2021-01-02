@@ -2,11 +2,12 @@ import torch
 from .self_smoothing_operator import SSO
 
 class WeightedKNNPredictor():
-    def __init__(self, k=10, gaussian_kernel_k=1.0, ssot=10, class_num=2):
+    def __init__(self, k=10, gaussian_kernel_k=1.0, ssot=10, class_num=2, sample_size=5000):
         self.gaussian_kernel_k = gaussian_kernel_k
         self.k = k
         self.sso = SSO(k_nearest_neighbors=k, gaussian_kernel_k=gaussian_kernel_k, iteration_num=ssot)
         self.class_num = class_num
+        self.sample_size = sample_size
 
     def __call__(self, batch_feature, data_bank):
         """
@@ -14,7 +15,7 @@ class WeightedKNNPredictor():
         :param data_bank: tensor in shape (data_size, feature_dim + 1), the last dimension of each data is the label id
         :return: probability tensor in shape (n, class_num)
         """
-        neighbors = data_bank[torch.randperm(data_bank.shape[0])[:2000], :]
+        neighbors = data_bank[torch.randperm(data_bank.shape[0])[:self.sample_size], :]
         feature_matrix = torch.cat([batch_feature, neighbors[:, :-1]], dim=0)
         # batch_smoothed_similarity_matrix = feature_matrix
         batch_smoothed_similarity_matrix = self.sso(feature_matrix=feature_matrix)
