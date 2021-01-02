@@ -19,6 +19,7 @@ import shutil
 
 def get_args():
     parser = argparse.ArgumentParser("train of flight delay forecasting model")
+    parser.add_argument("--model_version", type=str, help="model version for the train")
     parser.add_argument("--batch_size", type=int, default=128, help="The number of images per batch")
     parser.add_argument("--num_worker", type=int, default=4, help="The number of worker for dataloader")
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -285,4 +286,7 @@ def train(args):
 
 if __name__ == "__main__":
     args = get_args()
+
+    args.tensorboard_path = os.path.join(args.tensorboard_path, args.model_version)
+    args.checkpoint_root_dir = os.path.join(args.checkpoint_root_dir, args.model_version)
     train(args)
