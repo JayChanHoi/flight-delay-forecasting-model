@@ -43,7 +43,7 @@ def get_args():
     return args
 
 def train(args):
-    df = pd.read_csv(os.path.join(os.path.dirname(__file__),'data/FlightSchedule.csv'))
+    df = pd.read_csv(os.path.join(os.path.dirname(__file__).replace(os.path.basename(os.path.dirname(__file__)), ''),'data/FlightSchedule.csv'))
     train_data_df, test_data_df = train_test_split(df, test_size=0.25)
     info_prefix = InfoPrefix(df)
     route_dict = info_prefix.extract_route()
