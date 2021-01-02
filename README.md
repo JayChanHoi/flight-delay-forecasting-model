@@ -8,6 +8,17 @@ demonstrating coding test by implementing a data science solution for modeling a
 ### Inference
 ![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight_delay_forecasting.png)
 
+The solution here is constructed with metric learning. The feature transformation network is the only module that needed to train.
+Here we train it with unsupervised algorithms with autoencoder and random projection layer.
+
+For further exploration, the core feature transformation network can be consider to train by supervised or other metric learning algorithms, like those using 
+constractive loss, triplet loss, arcface loss.
+
+The raw feature are selected from the raw data columns and has been processed by discretization and feature scaling.
+
+As this is only the demonstrating a coding test, the infer module is not implemented as it only
+valid to use when it's ready for deployment.
+
 ## Installation
 Please setup environment with python 3.7 and install the dependencies by the following command.
 ```
