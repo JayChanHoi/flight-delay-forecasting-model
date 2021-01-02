@@ -20,7 +20,8 @@ As this is only the demonstrating a coding test, the infer module is not impleme
 valid to use when it's ready for deployment.
 
 ## Installation
-Please setup environment with python 3.7 and install the dependencies by the following command.
+Please setup environment with python 3.7 and install the dependencies by the following command. Here I use pytorch=1.5 as
+the deep learning framework which can provides dynamic tensor computation and is pythonic compared to other frameworks.
 ```
 pip install -r requirement.txt
 ```
