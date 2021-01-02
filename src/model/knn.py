@@ -15,10 +15,11 @@ class WeightedKNNPredictor():
         :param data_bank: tensor in shape (data_size, feature_dim + 1), the last dimension of each data is the label id
         :return: probability tensor in shape (n, class_num)
         """
-        neighbors = data_bank[torch.randperm(data_bank.shape[0])[:self.sample_size], :]
+        # neighbors = data_bank[torch.randperm(data_bank.shape[0])[:self.sample_size], :]
+        neighbors = data_bank
         feature_matrix = torch.cat([batch_feature, neighbors[:, :-1]], dim=0)
-        # batch_smoothed_similarity_matrix = feature_matrix
-        batch_smoothed_similarity_matrix = self.sso(feature_matrix=feature_matrix)
+        # batch_smoothed_similarity_matrix = self.sso(feature_matrix=feature_matrix)
+        batch_smoothed_similarity_matrix = self.sso._get_similarity_matrix(feature_matrix=feature_matrix)
         batch_sorted_similarity, batch_indices = torch.sort(
             batch_smoothed_similarity_matrix[:batch_feature.shape[0], batch_feature.shape[0]:],
             dim=1,
