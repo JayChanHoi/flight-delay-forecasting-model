@@ -19,6 +19,21 @@ The raw feature are selected from the raw data columns and has been processed by
 As this is only the demonstrating a coding test, the infer module is not implemented as it only
 valid to use when it's ready for deployment.
 
+## Features
+- aircraft name -> discretization
+- aircraft type -> discretization
+- route -> discretization
+- weekday of flight -> discretization
+- schedule departure time -> feature scaling
+- schedule arrival time -> feature scaling
+- pax adult -> feature scaling
+- pax inf -> feature scaling
+- seating capacity -> feature scaling
+- baggage weight -> feature sacling
+
+The features mentioned above will concatenate to form a feature vector with dimension of 122 as the input for feature 
+transformation network.
+
 ## Installation
 Please setup environment with python 3.7 and install the dependencies by the following command. Here I use pytorch=1.5 as
 the deep learning framework which can provides dynamic tensor computation and is pythonic compared to other frameworks.

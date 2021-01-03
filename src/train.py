@@ -12,6 +12,8 @@ from .utils import resume
 from .data_handler.data_processor import FlightDataset, InfoPrefix
 from .model.embedding_network import FTN
 from .model.knn import WeightedKNNPredictor
+from .model.prediction_network import PredNetwork
+from .model.focal_loss import FocalLoss
 
 import argparse
 import os
@@ -42,7 +44,7 @@ def get_args():
     args = parser.parse_args()
     return args
 
-def train(args):
+def train(args, metric_learning=True):
     df = pd.read_csv(os.path.join(os.path.dirname(__file__).replace(os.path.basename(os.path.dirname(__file__)), ''),'data/FlightSchedule.csv'))
     train_data_df, test_data_df = train_test_split(df, test_size=0.25)
     info_prefix = InfoPrefix(df)
@@ -94,13 +96,17 @@ def train(args):
     train_generator = DataLoader(train_dataset, **train_params)
     test_generator = DataLoader(test_dataset, **test_params)
 
-    model = FTN(input_dim=train_dataset.input_dim(), embedding_dim=args.embedding_dim, dropout_p=args.dropout_p)
-    random_projection_layer = torch.normal(mean=0, std=1.0, size=[train_dataset.input_dim(), args.random_projection_dim])
-    knn_predictor = WeightedKNNPredictor(args.num_nearest_neighbors, args.gaussian_kernel_k, args.SSOt, 2, args.sample_size)
+    if metric_learning:
+        model = FTN(input_dim=train_dataset.input_dim(), embedding_dim=args.embedding_dim, dropout_p=args.dropout_p)
+        random_projection_layer = torch.normal(mean=0, std=1.0, size=[train_dataset.input_dim(), args.random_projection_dim])
+        knn_predictor = WeightedKNNPredictor(args.num_nearest_neighbors, args.gaussian_kernel_k, args.SSOt, 2, args.sample_size)
+    else:
+        model = PredNetwork(input_dim=train_dataset.input_dim(), embedding_dim=args.embedding_dim, dropout_p=args.dropout_p)
 
     if torch.cuda.is_available():
         model.cuda()
-        random_projection_layer = random_projection_layer.cuda()
+        if metric_learning:
+            random_projection_layer = random_projection_layer.cuda()
 
     if args.resume is not None:
         _ = resume(model, device, args.resume)
@@ -138,112 +144,159 @@ def train(args):
             scheduler.step(epoch + iter / num_iter_per_epoch)
             optimizer.zero_grad()
             data_feature_1 = data['rep']
-            data_feature_2 = data['rep'][torch.randperm(data['rep'].shape[0])]
-            if torch.cuda.is_available():
-                reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.cuda().float())
-                reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.cuda().float())
-                random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.cuda().float(), dim=1, p=2),random_projection_layer))
-                random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.cuda().float(), dim=1, p=2),random_projection_layer))
-                rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
-                dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
-                reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.cuda().float())
-                reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.cuda().float())
-            else:
-                reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.float())
-                reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.float())
-                random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.float(), dim=1, p=2),random_projection_layer))
-                random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.float(), dim=1, p=2),random_projection_layer))
-                rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
-                dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
-                reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.float())
-                reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.float())
+            if metric_learning:
+                data_feature_2 = data['rep'][torch.randperm(data['rep'].shape[0])]
 
-            reconstruction_loss = reconstructed_loss_1 + reconstructed_loss_2
-            random_projection_loss = F.mse_loss(dr_inner_product, rp_inner_product)
-            combinded_loss = random_projection_loss + reconstruction_loss
-            combinded_loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), args.glip_threshold)
-            optimizer.step()
-            epoch_loss.append(float(combinded_loss))
+            if torch.cuda.is_available():
+                if metric_learning:
+                    reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.cuda().float())
+                    reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.cuda().float())
+                    random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.cuda().float(), dim=1, p=2),random_projection_layer))
+                    random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.cuda().float(), dim=1, p=2),random_projection_layer))
+                    rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
+                    dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
+                    reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.cuda().float())
+                    reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.cuda().float())
+                else:
+                    output = model(data_feature_1.cuda().float())
+                    label = data['label'].cuda()
+            else:
+                if metric_learning:
+                    reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.float())
+                    reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.float())
+                    random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.float(), dim=1, p=2),random_projection_layer))
+                    random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.float(), dim=1, p=2),random_projection_layer))
+                    rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
+                    dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
+                    reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.float())
+                    reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.float())
+                else:
+                    output = model(data_feature_1.float())
+                    label = data['label'].cuda()
+
+            if metric_learning:
+                reconstruction_loss = reconstructed_loss_1 + reconstructed_loss_2
+                random_projection_loss = F.mse_loss(dr_inner_product, rp_inner_product)
+                loss = random_projection_loss + reconstruction_loss
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), args.glip_threshold)
+                optimizer.step()
+                epoch_loss.append(float(loss))
+            else:
+                loss = F.cross_entropy(output,label)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), args.glip_threshold)
+                optimizer.step()
+                epoch_loss.append(float(loss))
+
             total_loss = np.mean(epoch_loss)
             train_iter += 1
 
-            progress_bar.set_description(
-                'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f}, rpd loss: {:.5f}, reconstruction loss:{:.5f}'.format(
-                    epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, combinded_loss, total_loss,
-                    random_projection_loss, reconstruction_loss
+            if metric_learning:
+                progress_bar.set_description(
+                    'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f}, rpd loss: {:.5f}, reconstruction loss:{:.5f}'.format(
+                        epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, loss, total_loss,
+                        random_projection_loss, reconstruction_loss
+                    )
                 )
-            )
+            else:
+                progress_bar.set_description(
+                    'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f'.format(
+                        epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, loss, total_loss,
+                    )
+                )
+
             writer.add_scalars('total_loss', {'train': total_loss}, train_iter)
 
         if (epoch + 1) % args.test_interval == 0 and epoch + 1 >= 0:
             epoch_loss = []
             model.eval()
 
-            data_bank = []
-            rdp_loss_list = []
-            reconstruction_loss_list = []
+            if metric_learning:
+                data_bank = []
+                rdp_loss_list = []
+                reconstruction_loss_list = []
+
             num_correct_pred = 0
             num_pred = 0
             with torch.no_grad():
-                for iter, data in enumerate(tqdm(train_generator)):
-                    if torch.cuda.is_available():
-                        reconstructed_inputs, dense_representation = model(data['rep'].cuda().float())
-                        label = data['label'].cuda()
-                    else:
-                        reconstructed_inputs, dense_representation = model(data['rep'].float())
-                        label = data['label'].cuda()
+                if metric_learning:
+                    for iter, data in enumerate(tqdm(train_generator)):
+                        if torch.cuda.is_available():
+                            reconstructed_inputs, dense_representation = model(data['rep'].cuda().float())
+                            label = data['label'].cuda()
+                        else:
+                            reconstructed_inputs, dense_representation = model(data['rep'].float())
+                            label = data['label'].cuda()
 
-                    for dense_feature_iter in range(dense_representation.shape[0]):
-                        data_bank_representation = torch.cat([dense_representation[dense_feature_iter, :],label[dense_feature_iter].float().unsqueeze(0)], dim=0)
-                        data_bank.append(data_bank_representation)
+                        for dense_feature_iter in range(dense_representation.shape[0]):
+                            data_bank_representation = torch.cat([dense_representation[dense_feature_iter, :],label[dense_feature_iter].float().unsqueeze(0)], dim=0)
+                            data_bank.append(data_bank_representation)
 
-                data_bank = torch.stack(data_bank, dim=0)
-                test_data_embedding_list = []
+                    data_bank = torch.stack(data_bank, dim=0)
+                    test_data_embedding_list = []
+
                 for iter, data in enumerate(tqdm(test_generator)):
                     data_feature_1 = data['rep']
-                    data_feature_2 = data['rep'][torch.randperm(data['rep'].shape[0])]
+                    if metric_learning:
+                        data_feature_2 = data['rep'][torch.randperm(data['rep'].shape[0])]
                     if torch.cuda.is_available():
-                        reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.cuda().float())
-                        reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.cuda().float())
-                        test_data_embedding_list.append(dense_representation_1)
-                        prob = knn_predictor(
-                            dense_representation_1.float(),
-                            data_bank
-                        )
+                        if metric_learning:
+                            reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.cuda().float())
+                            reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.cuda().float())
+                            test_data_embedding_list.append(dense_representation_1)
+                            prob = knn_predictor(
+                                dense_representation_1.float(),
+                                data_bank
+                            )
+                            random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.cuda().float(), dim=1, p=2),random_projection_layer))
+                            random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.cuda().float(), dim=1, p=2),random_projection_layer))
+                            rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
+                            dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
+                            reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.cuda().float())
+                            reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.cuda().float())
+                        else:
+                            logit = model(data_feature_1.cuda().float())
+                            prob = torch.softmax(logit, dim=1)
+                            label = data['label'].cuda()
+
                         pred = torch.argmax(prob, dim=1)
                         correct_pred = (pred == data['label'].cuda())
 
-                        random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.cuda().float(), dim=1, p=2),random_projection_layer))
-                        random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.cuda().float(), dim=1, p=2),random_projection_layer))
-                        rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
-                        dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
-                        reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.cuda().float())
-                        reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.cuda().float())
+
                     else:
-                        reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.float())
-                        reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.float())
-                        test_data_embedding_list.append(dense_representation_1)
-                        prob = knn_predictor(
-                            dense_representation_1.float(),
-                            data_bank,
-                        )
+                        if metric_learning:
+                            reconstructed_inputs_1, dense_representation_1 = model(data_feature_1.float())
+                            reconstructed_inputs_2, dense_representation_2 = model(data_feature_2.float())
+                            test_data_embedding_list.append(dense_representation_1)
+                            prob = knn_predictor(
+                                dense_representation_1.float(),
+                                data_bank,
+                            )
+                            random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.float(), dim=1, p=2),random_projection_layer))
+                            random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.float(), dim=1, p=2),random_projection_layer))
+                            rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
+                            dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
+                            reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.float())
+                            reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.float())
+                        else:
+                            logit = model(data_feature_1.float())
+                            prob = torch.softmax(logit, dim=1)
+                            label = data['label']
+
                         pred = torch.argmax(prob, dim=1)
                         correct_pred = (pred == data['label'])
 
-                        random_projected_output_1 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_1.float(), dim=1, p=2),random_projection_layer))
-                        random_projected_output_2 = torch.cos(torch.matmul(torch.nn.functional.normalize(data_feature_2.float(), dim=1, p=2),random_projection_layer))
-                        rp_inner_product = (random_projected_output_1 * random_projected_output_2).sum(dim=1) / (random_projected_output_2.shape[1] ** (1 / 2))
-                        dr_inner_product = (dense_representation_1 * dense_representation_2).sum(dim=1) / (dense_representation_2.shape[1] ** (1 / 2))
-                        reconstructed_loss_1 = F.mse_loss(reconstructed_inputs_1, data_feature_1.float())
-                        reconstructed_loss_2 = F.mse_loss(reconstructed_inputs_2, data_feature_2.float())
+                    if metric_learning:
+                        reconstruction_loss = reconstructed_loss_1 + reconstructed_loss_2
+                        random_projection_loss = F.mse_loss(dr_inner_product, rp_inner_product)
+                        loss = reconstruction_loss + random_projection_loss
+                        rdp_loss_list.append(random_projection_loss.item())
+                        reconstruction_loss_list.append(reconstruction_loss.item())
+                    else:
+                        loss = F.cross_entropy(output, label)
 
-                    reconstruction_loss = reconstructed_loss_1 + reconstructed_loss_2
-                    random_projection_loss = F.mse_loss(dr_inner_product, rp_inner_product)
-                    combinded_loss = reconstruction_loss + random_projection_loss
-                    epoch_loss.append(combinded_loss.item())
-                    rdp_loss_list.append(random_projection_loss.item())
-                    reconstruction_loss_list.append(reconstruction_loss.item())
+                    epoch_loss.append(loss.item())
                     num_correct_pred += correct_pred.sum(0).item()
                     num_pred += data['rep'].shape[0]
 
