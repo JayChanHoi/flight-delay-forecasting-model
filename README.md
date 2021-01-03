@@ -2,20 +2,28 @@
 This is the repository of flight delay forecasting model for HK Express. The purpose of this project is to 
 demonstrating coding test by implementing a data science solution for modeling a task of sparse feature data.
 
-## Solution
-### Train
+## Solution Architecture
+### Metric Learning Model
+#### Train
 ![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight-forecasting-model-train.png)
-### Inference
+#### Inference
 ![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight_delay_forecasting.png)
 
-The solution here is constructed with metric learning. The feature transformation network is the only module that needed to train.
+This solution here is constructed with metric learning. The feature transformation network is the only module that needed to train.
 Here we train it with unsupervised algorithms with autoencoder and random projection layer.
 
 For further exploration, the core feature transformation network can be consider to train by supervised or other metric learning algorithms, like those using 
 constractive loss, triplet loss, arcface loss.
 
-As this is only the demonstrating a coding test, the infer module is not implemented as it only
-valid to use when it's ready for deployment.
+### End to End Prediction Model
+![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight-delay-forecasting-prednet.png)
+
+This solution is constructed with multiple feed-forward neural network. Each of them serve different functionality.
+ - Discrete feature FFN -> transform discrete feature 
+ - continuous feature FFN -> transform continuous feature  
+ - fusion feature FFN -> used to fuse refined discrete feature and continuous feature
+Also, in order to reduce over-fitting and data set imbalance, label smoothing and focal loss are induced with this end to 
+end model. 
 
 ## Features
 The raw feature are selected from the raw data columns and has been processed by discretization and feature scaling.
