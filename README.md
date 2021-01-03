@@ -49,7 +49,7 @@ CUDA_VISIBLE_DEVICES=0,1 python -m src.train --batch_size 128 --test_interval 20
 ```
 if want to use supervised PredNetwork model
 ```
-CUDA_VISIBLE_DEVICES=0,1 python -m src.train --batch_size 128 --test_interval 20 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --smoothing_factor 0.05
+CUDA_VISIBLE_DEVICES=0,1 python -m src.train --batch_size 256 --test_interval 20 --embedding_dim 32 --num_epochs 2000 --model_version 1_3_5 --weight_decay 0.00005 --dropout_p 0.2 --smoothing_factor 0.1
 ```
 
 ### All GPU
@@ -59,7 +59,7 @@ python -m src.train --batch_size 128 --test_interval 20 --num_nearest_neighbors 
 ```
 if want to use supervised PredNetwork model
 ```
-python -m src.train --batch_size 128 --test_interval 20 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --smoothing_factor 0.05
+python -m src.train --batch_size 256 --test_interval 20 --embedding_dim 32 --num_epochs 2000 --model_version 1_3_5 --weight_decay 0.00005 --dropout_p 0.2 --smoothing_factor 0.1
 ```
 
 using the same command above with no GPU device will automatically switch to CPU mode.
