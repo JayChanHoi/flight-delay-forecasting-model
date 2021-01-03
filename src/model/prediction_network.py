@@ -22,7 +22,7 @@ class PredNetwork(nn.Module):
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(3 * embedding_dim, 4 * embedding_dim),
-            nn.BatchNorm1d(3 * embedding_dim, affine=True),
+            nn.BatchNorm1d(4 * embedding_dim, affine=True),
             nn.ReLU()
         )
 
@@ -40,7 +40,7 @@ class PredNetwork(nn.Module):
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(3 * (embedding_dim//2), 4 * (embedding_dim//2)),
-            nn.BatchNorm1d(3 * embedding_dim, affine=True),
+            nn.BatchNorm1d(4 * (embedding_dim//2), affine=True),
             nn.ReLU()
         )
 
