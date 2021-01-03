@@ -5,7 +5,7 @@ class LearnedSwish(nn.Module):
     def forward(self, x):
         return x * torch.sigmoid(x)
 
-class PredNetwork():
+class PredNetwork(nn.Module):
     def __init__(self, input_dim=122, embedding_dim=32, dropout_p=0.1):
         super(PredNetwork, self).__init__()
         self.feature_extraction_layers = nn.Sequential(
