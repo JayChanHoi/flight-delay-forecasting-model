@@ -50,7 +50,7 @@ class PredNetwork(nn.Module):
         self.pred_layer = nn.Linear(embedding_dim, 2)
 
     def __call__(self, inputs):
-        discrete_x = self.feature_extraction_layers(inputs[:116])
+        discrete_x = self.discrete_feature_layer(inputs[:116])
         continuous_x = self.continuous_feature_layer(inputs[116:])
         fused_x = self.fusion_layer(torch.cat([discrete_x, continuous_x], dim=1))
         output = self.pred_layer(fused_x)
