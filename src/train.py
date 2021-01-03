@@ -22,6 +22,7 @@ import shutil
 def get_args():
     parser = argparse.ArgumentParser("train of flight delay forecasting model")
     parser.add_argument("--model_version", type=str, help="model version for the train")
+    parser.add_argument("--metric_learning", type=bool, default=True, help="model version for the train")
     parser.add_argument("--batch_size", type=int, default=128, help="The number of images per batch")
     parser.add_argument("--num_worker", type=int, default=4, help="The number of worker for dataloader")
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -45,7 +46,8 @@ def get_args():
     args = parser.parse_args()
     return args
 
-def train(args, metric_learning=True):
+def train(args):
+    metric_learning = args.metric_learning
     df = pd.read_csv(os.path.join(os.path.dirname(__file__).replace(os.path.basename(os.path.dirname(__file__)), ''),'data/FlightSchedule.csv'))
     train_data_df, test_data_df = train_test_split(df, test_size=0.25)
     info_prefix = InfoPrefix(df)
