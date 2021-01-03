@@ -14,12 +14,12 @@ Here we train it with unsupervised algorithms with autoencoder and random projec
 For further exploration, the core feature transformation network can be consider to train by supervised or other metric learning algorithms, like those using 
 constractive loss, triplet loss, arcface loss.
 
-The raw feature are selected from the raw data columns and has been processed by discretization and feature scaling.
-
 As this is only the demonstrating a coding test, the infer module is not implemented as it only
 valid to use when it's ready for deployment.
 
 ## Features
+The raw feature are selected from the raw data columns and has been processed by discretization and feature scaling.
+
 - aircraft name -> discretization
 - aircraft type -> discretization
 - route -> discretization
@@ -43,13 +43,25 @@ pip install -r requirement.txt
 
 ## Getting Started
 ### Specific GPU
+if want to use metric learning model 
 ```
-CUDA_VISIBLE_DEVICES=0,1 python -m src.train --batch_size 128 --test_interval 20 --num_nearest_neighbors 3 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --gaussian_kernel_k 0.8
+CUDA_VISIBLE_DEVICES=0,1 python -m src.train --batch_size 128 --test_interval 20 --num_nearest_neighbors 3 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --gaussian_kernel_k 0.8 --metric_learning
 ```
+if want to use supervised PredNetwork model
+```
+CUDA_VISIBLE_DEVICES=0,1 python -m src.train --batch_size 128 --test_interval 20 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --smoothing_factor 0.05
+```
+
 ### All GPU
+if want to use metric learning model 
 ```
-python -m src.train --batch_size 128 --test_interval 20 --num_nearest_neighbors 3 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --gaussian_kernel_k 0.8
+python -m src.train --batch_size 128 --test_interval 20 --num_nearest_neighbors 3 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --gaussian_kernel_k 0.8 --metric_learning
 ```
+if want to use supervised PredNetwork model
+```
+python -m src.train --batch_size 128 --test_interval 20 --embedding_dim 128 --num_epochs 2000 --model_version 1_2_4 --smoothing_factor 0.05
+```
+
 using the same command above with no GPU device will automatically switch to CPU mode.
 
 ## License
