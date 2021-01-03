@@ -133,7 +133,7 @@ if __name__ == "__main__":
         info_prefix.extract_max_min_seating_capacity(),
         info_prefix.extract_max_min_baggage_weight()
     )
-    print(flight_dataset.__getitem__(12))
+    print(flight_dataset.__getitem__(2))
     print(flight_dataset.__len__())
     print(flight_dataset.input_dim())
 

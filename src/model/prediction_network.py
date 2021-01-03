@@ -8,8 +8,8 @@ class LearnedSwish(nn.Module):
 class PredNetwork(nn.Module):
     def __init__(self, input_dim=122, embedding_dim=32, dropout_p=0.1):
         super(PredNetwork, self).__init__()
-        self.feature_extraction_layers = nn.Sequential(
-            nn.Linear(input_dim, embedding_dim),
+        self.discrete_feature_layer = nn.Sequential(
+            nn.Linear(116, embedding_dim),
             nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(embedding_dim, 2 * embedding_dim),
@@ -19,13 +19,40 @@ class PredNetwork(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(3 * embedding_dim, 4 * embedding_dim),
-            LearnedSwish()
+            nn.ReLU()
         )
 
-        self.pred_layer = nn.Linear(4 * embedding_dim, 2)
+        self.continuous_feature_layer = nn.Sequential(
+            nn.Linear(6, (embedding_dim//2)),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear((embedding_dim//2), 2 * (embedding_dim//2)),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(2 * (embedding_dim//2), 3 * (embedding_dim//2)),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(3 * (embedding_dim//2), 4 * (embedding_dim//2)),
+            nn.ReLU()
+        )
+
+        self.fusion_layer = nn.Sequential(
+            nn.Linear(4 * ((embedding_dim//2) + embedding_dim), 3 * embedding_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(3 * embedding_dim, 2 * embedding_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(2 * embedding_dim, embedding_dim),
+            nn.ReLU(),
+        )
+
+        self.pred_layer = nn.Linear(embedding_dim, 2)
 
     def __call__(self, inputs):
-        x = self.feature_extraction_layers(inputs)
-        output = self.pred_layer(x)
+        discrete_x = self.feature_extraction_layers(inputs[:116])
+        continuous_x = self.continuous_feature_layer(inputs[116:])
+        fused_x = self.fusion_layer(torch.cat([discrete_x, continuous_x], dim=1))
+        output = self.pred_layer(fused_x)
 
         return output
