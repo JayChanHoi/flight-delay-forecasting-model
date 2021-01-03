@@ -10,35 +10,37 @@ class PredNetwork(nn.Module):
         super(PredNetwork, self).__init__()
         self.discrete_feature_layer = nn.Sequential(
             nn.Linear(116, embedding_dim),
-            nn.BatchNorm1d(embedding_dim),
+            nn.BatchNorm1d(embedding_dim, affine=True),
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(embedding_dim, 2 * embedding_dim),
-            nn.BatchNorm1d(2*embedding_dim),
+            nn.BatchNorm1d(2*embedding_dim, affine=True),
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(2 * embedding_dim, 3 * embedding_dim),
-            nn.BatchNorm1d(3*embedding_dim),
+            nn.BatchNorm1d(3*embedding_dim, affine=True),
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(3 * embedding_dim, 4 * embedding_dim),
+            nn.BatchNorm1d(3 * embedding_dim, affine=True),
             nn.ReLU()
         )
 
         self.continuous_feature_layer = nn.Sequential(
             nn.Linear(6, (embedding_dim//2)),
-            nn.BatchNorm1d(embedding_dim//2),
+            nn.BatchNorm1d(embedding_dim//2, affine=True),
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear((embedding_dim//2), 2 * (embedding_dim//2)),
-            nn.BatchNorm1d(2 * (embedding_dim//2)),
+            nn.BatchNorm1d(2 * (embedding_dim//2), affine=True),
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(2 * (embedding_dim//2), 3 * (embedding_dim//2)),
-            nn.BatchNorm1d(3 * (embedding_dim // 2)),
+            nn.BatchNorm1d(3 * (embedding_dim // 2), affine=True),
             nn.ReLU(),
             # nn.Dropout(dropout_p),
             nn.Linear(3 * (embedding_dim//2), 4 * (embedding_dim//2)),
+            nn.BatchNorm1d(3 * embedding_dim, affine=True),
             nn.ReLU()
         )
 
