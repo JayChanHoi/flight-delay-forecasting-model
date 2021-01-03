@@ -4,9 +4,6 @@ demonstrating coding test by implementing a data science solution for modeling a
 
 ## Solution Architecture
 ### Metric Learning Model
-#### Train
-![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight-forecasting-model-train.png)
-#### Inference
 ![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight_delay_forecasting.png)
 
 This solution here is constructed with metric learning. The feature transformation network is the only module that needed to train.
@@ -19,9 +16,11 @@ constractive loss, triplet loss, arcface loss.
 ![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight-delay-forecasting-prednet.png)
 
 This solution is constructed with multiple feed-forward neural network. Each of them serve different functionality.
+
  - Discrete feature FFN -> transform discrete feature 
  - continuous feature FFN -> transform continuous feature  
  - fusion feature FFN -> used to fuse refined discrete feature and continuous feature
+ 
 Also, in order to reduce over-fitting and data set imbalance, label smoothing and focal loss are induced with this end to 
 end model. 
 
