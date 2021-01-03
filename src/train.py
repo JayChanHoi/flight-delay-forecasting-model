@@ -194,9 +194,8 @@ def train(args, metric_learning=True):
 
             if metric_learning:
                 progress_bar.set_description(
-                    'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f}, rpd loss: {:.5f}, reconstruction loss:{:.5f}'.format(
-                        epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, loss, total_loss,
-                        random_projection_loss, reconstruction_loss
+                    'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f}'.format(
+                        epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, loss, total_loss
                     )
                 )
             else:
