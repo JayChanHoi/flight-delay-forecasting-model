@@ -46,9 +46,11 @@ class PredNetwork(nn.Module):
 
         self.fusion_layer = nn.Sequential(
             nn.Linear(4 * ((embedding_dim//2) + embedding_dim), 3 * embedding_dim),
+            nn.BatchNorm1d(3 * embedding_dim, affine=False),
             nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(3 * embedding_dim, 2 * embedding_dim),
+            nn.BatchNorm1d(2 * embedding_dim, affine=False),
             nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(2 * embedding_dim, embedding_dim),
