@@ -200,8 +200,8 @@ def train(args, metric_learning=True):
                 )
             else:
                 progress_bar.set_description(
-                    'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f'.format(
-                        epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, loss, total_loss,
+                    'Epoch: {}/{}. Iteration: {}/{}. loss: {:.5f} Total loss: {:.5f}'.format(
+                        epoch + 1, args.num_epochs, iter + 1, num_iter_per_epoch, loss, total_loss
                     )
                 )
 
@@ -293,7 +293,7 @@ def train(args, metric_learning=True):
                         rdp_loss_list.append(random_projection_loss.item())
                         reconstruction_loss_list.append(reconstruction_loss.item())
                     else:
-                        loss = F.cross_entropy(output, label)
+                        loss = F.cross_entropy(logit, label)
 
                     epoch_loss.append(loss.item())
                     num_correct_pred += correct_pred.sum(0).item()
@@ -305,8 +305,10 @@ def train(args, metric_learning=True):
             writer.add_scalars('total_loss', {'test': total_loss}, train_iter)
             writer.add_scalar('accuracy', accuracy, train_iter)
 
-            print('rdp loss: {}'.format(np.mean(rdp_loss_list)))
-            print('reconstruction loss: {}'.format(np.mean(reconstruction_loss_list)))
+            if metric_learning:
+                print('rdp loss: {}'.format(np.mean(rdp_loss_list)))
+                print('reconstruction loss: {}'.format(np.mean(reconstruction_loss_list)))
+
             print('Epoch: {}/{}. Total loss: {:1.5f}'.format(epoch + 1, args.num_epochs, total_loss))
             print('Epoch: {}/{}. accuracy : {:1.5f}'.format(epoch + 1, args.num_epochs, accuracy))
 

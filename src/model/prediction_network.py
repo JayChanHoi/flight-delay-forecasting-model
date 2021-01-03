@@ -16,9 +16,10 @@ class PredNetwork(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(2 * embedding_dim, embedding_dim),
-            LearnedSwish(),
+            nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(embedding_dim, embedding_dim),
+            LearnedSwish()
         )
 
         self.pred_layer = nn.Linear(embedding_dim, 2)
