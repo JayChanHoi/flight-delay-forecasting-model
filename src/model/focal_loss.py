@@ -22,4 +22,4 @@ class FocalLoss(nn.Module):
         smooth_loss = -(((1 - prob) ** self.gamma) * log_prob).mean(dim=-1)
         loss = (1.0 - self.smoothing) * nll_loss + self.smoothing * smooth_loss
 
-        return loss.mean(), self.smoothing
+        return loss.mean()
