@@ -22,7 +22,7 @@ import shutil
 def get_args():
     parser = argparse.ArgumentParser("train of flight delay forecasting model")
     parser.add_argument("--model_version", type=str, help="model version for the train")
-    parser.add_argument("--metric_learning", type=bool, default=True, help="model version for the train")
+    parser.add_argument("--metric_learning", type=bool, default=False, help="model version for the train")
     parser.add_argument("--batch_size", type=int, default=128, help="The number of images per batch")
     parser.add_argument("--num_worker", type=int, default=4, help="The number of worker for dataloader")
     parser.add_argument("--lr", type=float, default=1e-3)
