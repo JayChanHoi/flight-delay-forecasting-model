@@ -26,6 +26,7 @@ def get_args():
     parser.add_argument("--num_worker", type=int, default=4, help="The number of worker for dataloader")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument('--weight_decay', type=float, default=0.00004)
+    parser.add_argument('--smoothing_factor', type=float, default=0.05)
     parser.add_argument('--sample_size', type=int, default=5000)
     parser.add_argument('--embedding_dim', type=int, default=32)
     parser.add_argument('--random_projection_dim', type=int, default=256)
@@ -102,6 +103,7 @@ def train(args, metric_learning=True):
         knn_predictor = WeightedKNNPredictor(args.num_nearest_neighbors, args.gaussian_kernel_k, args.SSOt, 2, args.sample_size)
     else:
         model = PredNetwork(input_dim=train_dataset.input_dim(), embedding_dim=args.embedding_dim, dropout_p=args.dropout_p)
+        focal_loss = FocalLoss(args.smoothing_factor)
 
     if torch.cuda.is_available():
         model.cuda()
@@ -183,7 +185,7 @@ def train(args, metric_learning=True):
                 optimizer.step()
                 epoch_loss.append(float(loss))
             else:
-                loss = F.cross_entropy(output,label)
+                loss = focal_loss(output,label)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.glip_threshold)
                 optimizer.step()
@@ -293,7 +295,7 @@ def train(args, metric_learning=True):
                         rdp_loss_list.append(random_projection_loss.item())
                         reconstruction_loss_list.append(reconstruction_loss.item())
                     else:
-                        loss = F.cross_entropy(logit, label)
+                        loss = focal_loss(logit, label)
 
                     epoch_loss.append(loss.item())
                     num_correct_pred += correct_pred.sum(0).item()
