@@ -2,6 +2,34 @@
 This is the repository of flight delay forecasting model for HK Express. The purpose of this project is to 
 demonstrating coding test by implementing a data science solution for modeling a task of sparse feature data.
 
+## Repository Structure
+```
+.
+├── LICENSE
+├── README.md
+├── data
+│   ├── DelayReason.csv
+│   └── FlightSchedule.csv
+├── doc
+│   ├── Data\ Dictionary.xlsx
+│   ├── Presentation\ Questions.pdf
+│   ├── flight-delay-forecasting-prednet.png
+│   ├── flight-forecasting-model-train.png
+│   └── flight_delay_forecasting.png
+├── requirement.txt
+└── src
+    ├── data_handler
+    │   └── data_processor.py
+    ├── model
+    │   ├── embedding_network.py
+    │   ├── focal_loss.py
+    │   ├── knn.py
+    │   ├── prediction_network.py
+    │   └── self_smoothing_operator.py
+    ├── train.py
+    └── utils.py
+```
+
 ## Solution Architecture
 ### Metric Learning Model
 ![Screenshot](https://github.com/JayChanHoi/flight-delay-forecasting-model/blob/main/doc/flight_delay_forecasting.png)
