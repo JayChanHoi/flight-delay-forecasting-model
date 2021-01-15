@@ -210,6 +210,7 @@ def train(args):
                 )
 
             writer.add_scalars('total_loss', {'train': total_loss}, train_iter)
+            scheduler.step()
 
         if (epoch + 1) % args.test_interval == 0 and epoch + 1 >= 0:
             epoch_loss = []
@@ -338,8 +339,6 @@ def train(args):
 
             model.train()
             print('---------------------------------------------------------------------------------------------------')
-
-        scheduler.step()
 
     writer.close()
 
