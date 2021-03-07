@@ -1,6 +1,5 @@
 # flight-delay-forecasting-model
-This is the repository of flight delay forecasting model for HK Express. The purpose of this project is to 
-demonstrating coding test by implementing a data science solution for modeling a task of sparse feature data.
+This is the repository of flight delay forecasting model. The purpose of this project is to demonstrating coding test by implementing a data science solution for modeling a task of sparse feature data.
 
 ## Repository Structure
 ```
